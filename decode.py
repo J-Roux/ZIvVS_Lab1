@@ -1,6 +1,10 @@
 from bitarray import bitarray
+from numba import jit
 import numpy as np
 import itertools
+import time
+
+
 def create_combinations(arr):
    return  itertools.combinations(arr, 2)
 
@@ -8,9 +12,6 @@ def create_combinations(arr):
 def get_seq():
     with open('encode_seq.txt', encoding='utf-8') as f:
        return  f.readlines()
-
-
-
 
 def get_words():
     seq = get_seq()
@@ -20,24 +21,12 @@ def get_words():
     one = arr[:5]
     two = arr[5:10]
     three = arr[10:15]
-    #one.reverse()
-    #two.reverse()
-    #three.reverse()
     words = [one, two, three]
     return words
 
-Sum = []
-for i in  create_combinations(get_words()):   
-    a = i[0] 
-    b = i[1]
-    Sum.append( [ t1 ^ t2 for t1, t2 in zip(a,b)])
-#print (Sum)
-
-
-
 def get_library():
     with open('library.txt',encoding='utf-8-sig') as f:
-        return ''.join(f.readlines()).split()
+        return [ i.replace(',', '') for i in ''.join(f.readlines()).split()]
 
 def get_letters():
     with open('alphabet.txt', encoding='utf-8-sig') as f:
@@ -46,53 +35,75 @@ def get_letters():
 def get_bit_combinations():
     return [ bitarray(it)  for it in itertools.combinations('01', 3)]
 
-arr = '0101'
-library =[ i.replace(',', '') for i in get_library()];
-comb = [bitarray(''.join(i)) for i in set([it for it in itertools.combinations_with_replacement(arr,3)])]
-comb = [ i for i in itertools.permutations(comb, 8)]
-letters = [ i  for i in get_letters()]
-check = 0
-result = {}
-decode_words = []
-for item in comb:
-    s = { l : i   for i,l  in zip(item,letters)}
-    code_library = [ [ s[i] for i in word] for word in library]
-    if check == 2:
-        break
+def get_sum():
+    xor_sum = []
+    for i in  create_combinations(get_words()):   
+        a = i[0] 
+        b = i[1]
+        xor_sum.append( [ t1 ^ t2 for t1, t2 in zip(a,b)])
+    return xor_sum
+
+
+def get_combinations():
+    arr = '0101'
+    comb = [bitarray(''.join(i)) for i in set([it for it in itertools.combinations_with_replacement(arr,3)])]
+    comb = [ i for i in itertools.permutations(comb, 8)]
+    return comb
+
+
+def get_dictionary(letters, binary_combination):
+    return  { l : i   for i,l  in zip(binary_combination, letters)}
+
+
+def encode_library(dictionary, library):
+    return  [ [ dictionary[i] for i in word] for word in library]
+@jit 
+def get_code (encode_word_one, xor_sum):
+    return  [i ^ j for i,j in zip(encode_word_one, xor_sum)]
+
+
+def check_encode_word(encode_word_one, xor_sum, encoding_library):
+    code = get_code(encode_word_one, xor_sum)
+    if code in encoding_library:
+        return (True, code)
+    else:
+        return (False, None)
+
+def bruteforce(letters, library, xor_sum):
+    binary_combinations = get_combinations()
     check = 0
+    results = []
+    for binary_combination in binary_combinations:
+        dictionary = get_dictionary(letters, binary_combination)
+        encoding_library = encode_library(dictionary, library)
+        for encode_word_one in encoding_library:
+            (in_library, encode_word_two) = check_encode_word(encode_word_one, xor_sum[1], encoding_library)
+            if not in_library:
+                break
+            (in_library, encode_word_three) = check_encode_word(encode_word_one, xor_sum[2], encoding_library)
+            code2 = [i ^ j for i,j in zip(encode_word_one, xor_sum[2])]
+            if not in_library:
+                break
+            else:
+                decode_dic = {dictionary[i].to01() : i for i in dictionary}
+                results.append([ decode_dic,
+                                 ''.join([decode_dic[i.to01()] for i in encode_word_one]),
+                                 ''.join([decode_dic[i.to01()] for i in encode_word_two]),
+                                 ''.join([decode_dic[i.to01()] for i in encode_word_three])
+                                ])
+    return results
 
-    for code in code_library:
-        check = 0
-        code1 = [i ^ j for i,j in zip(code, Sum[1])]
-        if code1 in code_library:
-            check += 1
-        else:
-            break
-        code2 = [i ^ j for i,j in zip(code, Sum[2])]
-        if code2 in code_library:
-            check += 1
-        else:
-            break
-        if check == 2:
-            print(s)
-            print(code)
-            print(code1)
-            print(code2)
-            decode_dic = {s[i].to01() : i for i in s}
-            print(''.join([decode_dic[i.to01()] for i in code]))
-            print(''.join([decode_dic[i.to01()] for i in code1]))
-            print(''.join([decode_dic[i.to01()] for i in code2]))
-            result = s;
-            #break
-
-#decode_dic  = { s[i].to01(): i   for i in s}
-#words = get_words()
-#words = [ [ decode_dic[j.to01()] for j in i] for i in get_words()]
-#print(words)
-#print(decode_dic)
-
-#word = [ s[i]  for i in word]
-       # print word;
-       # readkey();
+def main():
+    xor_sum = get_sum()
+    library = get_library()  
+    letters = get_letters()
+    results = np.array(bruteforce(letters, library, xor_sum ))
+    print(results)
 
 
+
+if __name__ == '__main__':
+    start = time.time()
+    main()
+    end = time.time()
+    print(end - start) 
