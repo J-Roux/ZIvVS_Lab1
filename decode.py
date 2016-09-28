@@ -57,7 +57,8 @@ def get_dictionary(letters, binary_combination):
 
 def encode_library(dictionary, library):
     return  [ [ dictionary[i] for i in word] for word in library]
-@jit 
+
+
 def get_code (encode_word_one, xor_sum):
     return  [i ^ j for i,j in zip(encode_word_one, xor_sum)]
 
@@ -81,7 +82,6 @@ def bruteforce(letters, library, xor_sum):
             if not in_library:
                 break
             (in_library, encode_word_three) = check_encode_word(encode_word_one, xor_sum[2], encoding_library)
-            code2 = [i ^ j for i,j in zip(encode_word_one, xor_sum[2])]
             if not in_library:
                 break
             else:
