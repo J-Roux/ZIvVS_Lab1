@@ -1,5 +1,4 @@
 from bitarray import bitarray
-from numba import jit
 import numpy as np
 import itertools
 import time
@@ -93,17 +92,24 @@ def bruteforce(letters, library, xor_sum):
                                 ])
     return results
 
+
+
 def main():
     xor_sum = get_sum()
     library = get_library()  
     letters = get_letters()
+    start = time.time()
     results = np.array(bruteforce(letters, library, xor_sum ))
+    end = time.time()
+    print(end - start)
+    print(results)
+
+    start = time.time()
+    results = np.array(bruteforce(letters, library[:int(len(library) / 2)], xor_sum ))
+    end = time.time()
+    print(end - start)
     print(results)
 
 
-
 if __name__ == '__main__':
-    start = time.time()
     main()
-    end = time.time()
-    print(end - start) 
