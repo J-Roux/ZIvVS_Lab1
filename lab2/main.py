@@ -1,9 +1,14 @@
 from sympy.ntheory.factor_ import totient
 from random import randint
+import numpy as np
+import string
+
+alphabet = range(ord(' '), ord('~'))
+print([chr(i) for i in alphabet])
 a = 5 
 b = 7
-p = 23 
-message = 17
+p = 223
+
 
 print ('p = %i' % p)
 print ('a = %i' % a)
@@ -25,58 +30,35 @@ def code_text(text, a, b, p):
     alpha = get_param(a)
     beta = get_param(b)
     return  [ (char**a % p) ** b % p  for char in text]
-    
+
+
+
+        
 def decode_text(encode_text, p):
+    alpha_t = [ encode_text[0] ** i % p for i in range(0, p)]    
+    a_t = map(lambda x : x[0], filter( lambda x : x, [get_multiplier(alpha, phi(p), 1) for alpha in alpha_t]))
+    beta_t = [ encode_text[0] ** a % p for a in a_t]
+    b_t = map(lambda x : x[0], filter( lambda x : x, [get_multiplier(beta, phi(p), 1) for beta in beta_t]))
+    u3_t = [ [ char**a % p for char in encode_text] for a in a_t]
+    return np.reshape(map(lambda x :[ [ char ** b % p for char in x] for b in b_t ], u3_t),
+                                    (len(a_t) * len(b_t) ,len(encode_text)))
+content = ''
+with open('message1.txt') as f:
+    content = f.read().replace('\n', '')
 
-    alpha_t = [ encode_text[0] ** i % p for i in range(0, p)]
-    print(alpha_t)    
-    a_t = [get_multiplier(alpha, phi(p), 1) for alpha in alpha_t]
-    a_t = []
-    for alpha in alpha_t:
-        a = get_multiplier(alpha, phi(p), 1)
-        if a :
-            
-    #beta_t = [ encode_text[0] ** a % p for a in a_t]
-    #b_t = [get_multiplier(beta, phi(p), 1) for beta in beta_t]
-    print(alpha_t)
-    print(a_t)
-   # print(beta_t)
-   # print(b_t)
+print(content)
+content = map(lambda x : ord(x) ,list(content))
 
 
-encode_text = code_text([message], a, b, p)
-print(encode_text)
-decode_text(encode_text, p)
+#alphabet = [ 1, 17, 9, 22, 33, 533, 444]
+mes = content #[17,9, 9, 1,1, 1, 9, 9, 22, 17]
 
-
-alpha = get_param(a)
-beta = get_param(b)
-print ('alpha = %i' % alpha)
-print ('beta = %i' % beta)
-print ('----------------------------------------------------')
-
-
-
-print('message = %d' % message)
-u1 = message ** a % p
-u2 = u1 ** b % p
-u3 = u2 ** alpha % p
-u4 = u3 ** beta % p
-print('u2 = %i' % u2)
-print('u3 = %i' % u3)
-print('u4 = %i' % u4)
-
-
-
-
-alpha_t = [i for i in range(0, p) if u2 ** i % p == u3][0] 
-print('alpha = %i' %  alpha_t)
-a_t = get_multiplier(alpha_t, phi(p),1)[0]
-print('a = %i' % a_t)
-beta_t = u2 ** a_t % p 
-print('beta = %i' % beta_t)
-b_t = get_multiplier(beta_t, phi(p),1)[0]
-print('b = %i' % b_t)
-
+encode_text = code_text(mes, a, b, p)
+variants  = decode_text(encode_text, p)
+print(len( variants))
+text = filter(lambda x : len(x) == len(mes)  ,filter(lambda x : x ,
+        map(lambda x: filter(lambda y : y in alphabet, x)  ,variants)))
+print( len(text))
+print(''.join( chr(ascii_code) for ascii_code in text[0]))
 
 
