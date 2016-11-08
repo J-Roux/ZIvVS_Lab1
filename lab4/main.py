@@ -8,13 +8,18 @@ test_arr = [
     [4, 6],
     [5, 6],
     [7, 7],
-    [1, 2]
+    [1, 2],
+    [3, 5],
+    [8, 4]
 ]
 
+
+print(2 ** len(test_arr) )
 s = 5
-size = 15
+size = 23 
 N = 5
 gen_size = 20
+print(gen_size * N)
 #size = int(input('Enter rucksack size  '))
 #N = int(input('Enter number of generations  '))
 items = []
@@ -30,7 +35,7 @@ while result != "":
         break
     items.append([int(i) for i in item.split(' ')])
 
-vec = [[ random.randint(0, 1) for i in range(0, len(items))] for i in range(0, 20)]
+vec = [[ random.randint(0, 1) for i in range(0, len(items))] for i in range(0, gen_size)]
 best = set()
 def count_weight_and_value(vec, items):
     values = [ np.add.reduce( np.multiply(i , [ j[0] for j in items] )) for i in vec]
@@ -72,4 +77,8 @@ def iteration(vec, items, best, generation_size, s, size):
 
 for i in range(0, 100):
     vec = iteration(vec, items, best, 20, 7, 23)
-print(best)
+
+best = list(best)
+print(items)
+print("best: ")
+print(best[np.argmax([ i[1][0] for i in best])])
