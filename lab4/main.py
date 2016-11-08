@@ -10,30 +10,23 @@ test_arr = [
     [7, 7],
     [1, 2],
     [3, 5],
-    [8, 4]
+    [8, 4],
+    [2, 2]
 ]
 
 
-print(2 ** len(test_arr) )
 s = 5
-size = 23 
+size = 27
 N = 5
-gen_size = 20
-print(gen_size * N)
-#size = int(input('Enter rucksack size  '))
-#N = int(input('Enter number of generations  '))
+gen_size = 15
+print('s = %i' % s)
+print('size = %i' % size)
+print('gen_size = %i' % gen_size)
+print('Number of generations = %i' % N)
+print('Number of individual  = %i' % (gen_size * N))
 items = []
-print('Enter item size and value')
-print('      size: value:')
-#result = input("test arr?")
-result = ""
-if result == "":
-    items = test_arr
-while result != "":
-    item = input('item: ')
-    if item =="":
-        break
-    items.append([int(i) for i in item.split(' ')])
+
+items = test_arr
 
 vec = [[ random.randint(0, 1) for i in range(0, len(items))] for i in range(0, gen_size)]
 best = set()
@@ -75,10 +68,22 @@ def iteration(vec, items, best, generation_size, s, size):
     return vec
 
 
-for i in range(0, 100):
-    vec = iteration(vec, items, best, 20, 7, 23)
+for i in range(0, N):
+    vec = iteration(vec, items, best, gen_size, s, size)
 
 best = list(best)
 print(items)
-print("best: ")
-print(best[np.argmax([ i[1][0] for i in best])])
+print('best: ')
+def print_best(list_best):
+    best_item = list_best[np.argmax([ i[1][0] for i in list_best])]
+    print(best_item[0])
+    print('weight %i' % best_item[1][1])
+    print('value %i' % best_item[1][0])
+print_best(best)
+
+
+comb = list(itertools.product([1,0], repeat=len(items)))
+print('Number of individual by brootforce = %i' % len(comb))
+data = count_weight_and_value(comb, items)
+data = list(filter(lambda x : x[1][1] <= size , data))
+print_best(data)
